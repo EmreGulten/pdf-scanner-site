@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF Scanner – Akıllı PDF Tarama Uygulaması</title>
+  <meta name="description" content="PDF Scanner ile belgeleri tarayın, Türkçe ve İngilizce metni cihazda tanıyın ve PDF dosyalarını iPhone veya iPad'de yönetin." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="app-icon.png" type="image/png" />
+  <style>
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-hero);
+    }
+
+    .hero-orb-1 { width: 500px; height: 500px; top: -150px; right: -100px; }
+    .hero-orb-2 { width: 350px; height: 350px; bottom: -100px; left: -100px; }
+
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(168,85,247,.12);
+      border: 1px solid rgba(168,85,247,.3);
+      border-radius: 100px;
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--purple-light);
+      margin-bottom: 24px;
+    }
+
+    .hero-badge .dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--cyan);
+      animation: pulse-glow 2s infinite;
+    }
+
+    .hero-title {
+      margin-bottom: 20px;
+    }
+
+    .hero-desc {
+      font-size: 1.15rem;
+      margin-bottom: 36px;
+      max-width: 480px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      margin-top: 48px;
+    }
+
+    .stat { }
+    .stat-num {
+      font-size: 1.8rem;
+      font-weight: 800;
+      background: var(--grad-glow);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Phone Mockup ── */
+    .hero-visual {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    }
+
+    .phone-frame {
+      width: 280px;
+      height: 580px;
+      background: linear-gradient(160deg, #1a1a3e 0%, #0e0e2a 100%);
+      border-radius: 40px;
+      border: 2px solid rgba(168,85,247,.4);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,.05),
+        0 40px 80px rgba(0,0,0,.6),
+        0 0 80px rgba(124,58,237,.3);
+      overflow: hidden;
+      position: relative;
+      animation: float 7s ease-in-out infinite;
+    }
+
+    .phone-notch {
+      width: 100px;
+      height: 30px;
+      background: #0e0e2a;
+      border-radius: 0 0 20px 20px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 2;
+    }
+
+    .phone-screen {
+      padding: 16px;
+      height: calc(100% - 30px);
+    }
+
+    .phone-ui-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .phone-ui-title { font-size: 18px; font-weight: 700; }
+    .phone-ui-icon  { font-size: 20px; }
+
+    .phone-doc-card {
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .phone-doc-icon {
+      width: 40px; height: 48px;
+      background: var(--grad-primary);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .phone-doc-name { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+    .phone-doc-meta { font-size: 10px; color: var(--text-muted); }
+
+    .phone-scan-btn {
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px; height: 60px;
+      background: var(--grad-primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 0 30px rgba(124,58,237,.7);
+    }
+
+    .phone-glow {
+      position: absolute;
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, rgba(124,58,237,.4) 0%, transparent 70%);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+
+    /* ── Features ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    .feature-card {
+      padding: 32px 28px;
+    }
+
+    .feature-icon {
+      width: 56px; height: 56px;
+      border-radius: var(--radius-md);
+      background: var(--grad-subtle);
+      border: 1px solid rgba(168,85,247,.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      margin-bottom: 20px;
+      transition: var(--transition);
+    }
+
+    .feature-card:hover .feature-icon {
+      background: var(--grad-primary);
+      border-color: transparent;
+      box-shadow: 0 8px 24px rgba(124,58,237,.5);
+    }
+
+    .feature-card h3 { margin-bottom: 10px; font-size: 1.1rem; }
+
+    /* ── How It Works ── */
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 64px;
+    }
+
+    .step-card {
+      padding: 36px 28px;
+      text-align: center;
+      position: relative;
+    }
+
+    .step-num {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: var(--grad-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.2rem;
+      margin: 0 auto 20px;
+      box-shadow: 0 8px 24px rgba(124,58,237,.5);
+    }
+
+    .step-card::after {
+      content: '→';
+      position: absolute;
+      top: 36px;
+      right: -14px;
+      font-size: 1.5rem;
+      color: var(--purple-light);
+      opacity: 0.4;
+    }
+
+    .step-card:last-child::after { display: none; }
+
+    /* ── CTA Section ── */
+    .cta-section {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-card {
+      padding: 80px 60px;
+      border-radius: var(--radius-xl);
+      text-align: center;
+      position: relative;
+      background: linear-gradient(135deg, rgba(124,58,237,.2) 0%, rgba(37,99,235,.2) 100%);
+      border: 1px solid rgba(168,85,247,.25);
+    }
+
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--grad-hero);
+      opacity: 0.5;
+      border-radius: inherit;
+    }
+
+    .cta-card > * { position: relative; z-index: 1; }
+
+    .cta-card h2 { margin-bottom: 16px; }
+    .cta-card p  { margin-bottom: 36px; font-size: 1.1rem; }
+
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; text-align: center; }
+      .hero-desc  { margin: 0 auto 36px; }
+      .hero-buttons { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { margin-top: 40px; }
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .steps-grid { grid-template-columns: 1fr; }
+      .step-card::after { display: none; }
+      .cta-card { padding: 48px 24px; }
+    }
+
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar">
+  <div class="container">
+    <a href="index.html" class="nav-brand">
+      <img src="app-icon.png" alt="PDF Scanner Icon" />
+      PDF Scanner
+    </a>
+    <ul class="nav-links">
+      <li><a href="#features">Özellikler</a></li>
+      <li><a href="#howitworks">Nasıl Çalışır</a></li>
+      <li><a href="privacy.html">Gizlilik</a></li>
+      <li><a href="terms.html">Koşullar</a></li>
+      <li><a href="#download" class="btn-nav">Yayın Durumu</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<section class="hero">
+  <div class="glow-orb orb-purple hero-orb-1"></div>
+  <div class="glow-orb orb-blue   hero-orb-2"></div>
+
+  <div class="container">
+    <div class="hero-inner">
+      <!-- Left Column -->
+      <div class="hero-text">
+        <div class="hero-badge">
+          <span class="dot"></span>
+          App Store için hazırlanıyor
+        </div>
+        <h1 class="hero-title">
+          Belgelerinizi<br/>
+          <span class="gradient-text">Süper Güce</span><br/>
+          Kavuşturun
+        </h1>
+        <p class="hero-desc">
+          PDF Scanner ile kağıt belgelerinizi saniyeler içinde dijitalleştirin. 
+          Gelişmiş OCR teknolojisi, akıllı düzenleme ve güçlü PDF araçlarıyla 
+          verimliliğinizi bir üst seviyeye taşıyın.
+        </p>
+        <div class="hero-buttons">
+          <a href="#download" class="appstore-btn" id="hero-appstore-btn">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98l-.09.06c-.22.17-2.2 1.3-2.18 3.87.03 3.07 2.67 4.1 2.7 4.11l-.06.19M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+            </svg>
+            <div class="store-text">
+              <small>Yakında App Store'da</small>
+              <span>PDF Scanner</span>
+            </div>
+          </a>
+          <a href="#features" class="btn btn-secondary" id="hero-features-btn">
+            Özellikleri Keşfet
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M7 17L17 7M17 7H7M17 7v10"/>
+            </svg>
+          </a>
+        </div>
+
+        <div class="hero-stats">
+          <div class="stat"><div class="stat-num">2</div><div class="stat-label">OCR Dili</div></div>
+          <div class="stat"><div class="stat-num">Yerel</div><div class="stat-label">Belge Saklama</div></div>
+        </div>
+      </div>
+
+      <!-- Right Column – Phone Mockup -->
+      <div class="hero-visual">
+        <div class="phone-glow"></div>
+        <div class="phone-frame animate-pulse-glow">
+          <div class="phone-notch"></div>
+          <div class="phone-screen">
+            <div class="phone-ui-header">
+              <div class="phone-ui-title">Belgelerim</div>
+              <div class="phone-ui-icon">⚙️</div>
+            </div>
+
+            <div class="phone-doc-card">
+              <div class="phone-doc-icon">📄</div>
+              <div>
+                <div class="phone-doc-name">Sözleşme_2024.pdf</div>
+                <div class="phone-doc-meta">2.4 MB · Bugün 09:14</div>
+              </div>
+            </div>
+
+            <div class="phone-doc-card">
+              <div class="phone-doc-icon" style="background: linear-gradient(135deg,#06b6d4,#2563eb);">🖼️</div>
+              <div>
+                <div class="phone-doc-name">Fatura_Mart.pdf</div>
+                <div class="phone-doc-meta">1.1 MB · Dün 18:30</div>
+              </div>
+            </div>
+
+            <div class="phone-doc-card">
+              <div class="phone-doc-icon" style="background: linear-gradient(135deg,#a855f7,#7c3aed);">📑</div>
+              <div>
+                <div class="phone-doc-name">Pasaport_Kopyası.pdf</div>
+                <div class="phone-doc-meta">3.7 MB · 4 Mar 2025</div>
+              </div>
+            </div>
+
+            <div class="phone-doc-card">
+              <div class="phone-doc-icon" style="background: linear-gradient(135deg,#10b981,#06b6d4);">📊</div>
+              <div>
+                <div class="phone-doc-name">Rapor_Q1_2025.pdf</div>
+                <div class="phone-doc-meta">5.2 MB · 1 Mar 2025</div>
+              </div>
+            </div>
+
+            <div class="phone-scan-btn">＋</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FEATURES ═══════════ -->
+<section class="section" id="features">
+  <div class="container">
+    <span class="section-label">Güçlü Özellikler</span>
+    <h2 class="section-title">İhtiyacınız Olan <span class="gradient-text">Her Şey</span></h2>
+    <p class="section-desc">
+      PDF Scanner, tarama, düzenleme ve paylaşım için ihtiyaç duyduğunuz tüm araçları 
+      tek çatı altında sunar.
+    </p>
+
+    <div class="features-grid">
+      <div class="glass-card feature-card" id="feat-scan">
+        <div class="feature-icon">📷</div>
+        <h3>Akıllı Tarama</h3>
+        <p>Yapay zeka destekli kenar algılama ile belgelerinizi otomatik olarak hizalar ve perspektif düzeltmesi uygular.</p>
+      </div>
+
+      <div class="glass-card feature-card" id="feat-ocr">
+        <div class="feature-icon">🔤</div>
+        <h3>OCR – Metin Tanıma</h3>
+        <p>Türkçe ve İngilizce metni cihaz üzerinde tanıyın; sonucu kopyalayın veya paylaşın.</p>
+      </div>
+
+      <div class="glass-card feature-card" id="feat-pdf">
+        <div class="feature-icon">🔧</div>
+        <h3>PDF Araçları</h3>
+        <p>PDF birleştirme, bölme, sıkıştırma, şifreleme ve dönüştürme işlemlerini kolayca gerçekleştirin.</p>
+      </div>
+
+      <div class="glass-card feature-card" id="feat-cloud">
+        <div class="feature-icon">☁️</div>
+        <h3>Yerel Belgeler</h3>
+        <p>Belgelerinizi uygulamada saklayın ve istediğiniz zaman iOS paylaşım menüsüyle dışa aktarın.</p>
+      </div>
+
+      <div class="glass-card feature-card" id="feat-sign">
+        <div class="feature-icon">✍️</div>
+        <h3>Dijital İmza</h3>
+        <p>PDF üzerine el yazısı imzanızı ekleyin ve imzalanmış kopyayı paylaşın.</p>
+      </div>
+
+      <div class="glass-card feature-card" id="feat-security">
+        <div class="feature-icon">🔒</div>
+        <h3>Güvenlik & Şifreleme</h3>
+        <p>PDF dosyalarına parola ekleyin; korunan belgeleri parola girerek açın.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ HOW IT WORKS ═══════════ -->
+<section class="section" id="howitworks" style="background: linear-gradient(180deg, transparent 0%, rgba(124,58,237,.05) 50%, transparent 100%);">
+  <div class="container">
+    <span class="section-label">Nasıl Çalışır</span>
+    <h2 class="section-title">3 Adımda <span class="gradient-text">Dijital Dönüşüm</span></h2>
+    <p class="section-desc">Karmaşık kurulum yok. Hemen kullanmaya başlayın.</p>
+
+    <div class="steps-grid">
+      <div class="glass-card step-card" id="step-1">
+        <div class="step-num">1</div>
+        <h3>Fotoğraf Çekin</h3>
+        <p>Kamera ile belgenizi çerçeveleyin. Uygulama otomatik kenar algılar ve en iyi açıyı bulur.</p>
+      </div>
+
+      <div class="glass-card step-card" id="step-2">
+        <div class="step-num">2</div>
+        <h3>Otomatik İşleme</h3>
+        <p>Görüntüyü düzenleyip PDF oluşturun; isterseniz metni OCR ile çıkarın.</p>
+      </div>
+
+      <div class="glass-card step-card" id="step-3">
+        <div class="step-num">3</div>
+        <h3>Paylaşın</h3>
+        <p>PDF'nizi e-posta, mesaj veya bulut depolama üzerinden saniyeler içinde paylaşın.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ CTA / DOWNLOAD ═══════════ -->
+<section class="section cta-section" id="download">
+  <div class="container">
+    <div class="cta-card">
+      <div class="glow-orb orb-purple" style="width:300px;height:300px;top:-100px;right:-50px;opacity:.4;position:absolute;"></div>
+      <div class="glow-orb orb-blue"   style="width:200px;height:200px;bottom:-80px;left:-40px;opacity:.3;position:absolute;"></div>
+
+      <span class="section-label">Yayın Hazırlığı</span>
+      <h2>Yakında <span class="gradient-text">App Store'da</span></h2>
+      <p>Tarama, OCR ve PDF araçları ücretsiz kullanılabilir.<br/>Premium abonelik uygulama içi reklamları kaldırır.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="footer-brand">
+          <img src="app-icon.png" alt="PDF Scanner" />
+          PDF Scanner
+        </div>
+        <p style="font-size:.9rem; max-width:260px;">Belgelerinizi dijitalleştirmenin en akıllı ve hızlı yolu. iOS için premium tarama uygulaması.</p>
+      </div>
+
+      <div class="footer-col">
+        <h5>Uygulama</h5>
+        <ul>
+          <li><a href="#features">Özellikler</a></li>
+          <li><a href="#howitworks">Nasıl Çalışır</a></li>
+          <li><a href="#download">İndir</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h5>Yasal</h5>
+        <ul>
+          <li><a href="privacy.html">Gizlilik Politikası</a></li>
+          <li><a href="terms.html">Kullanım Koşulları</a></li>
+          <li><a href="mailto:emregulten035@gmail.com">Destek: emregulten035@gmail.com</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <p style="color: var(--text-muted);">© 2026 PDF Scanner. Tüm hakları saklıdır.</p>
+      <p style="color: var(--text-muted); font-size:.8rem;">iOS, Apple Inc. şirketinin ticari markasıdır.</p>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
